@@ -33,13 +33,13 @@
     Cyan=$(tput setaf 6)
     White=$(tput setaf 7)
     # Bold
-    BRed=${Bold}$(tput setaf 1)
-    BGreen=${Bold}$(tput setaf 2)
-    BYellow=${Bold}$(tput setaf 3)
-    BBlue=${Bold}$(tput setaf 4)
-    BPurple=${Bold}$(tput setaf 5)
-    BCyan=${Bold}$(tput setaf 6)
-    BWhite=${Bold}$(tput setaf 7)
+    BRed=${Bold}${Red}
+    BGreen=${Bold}${Green}
+    BYellow=${Bold}${Yellow}
+    BBlue=${Bold}${Blue}
+    BPurple=${Bold}${Purple}
+    BCyan=${Bold}${Cyan}
+    BWhite=${Bold}${White}
   #}}}
   # PROMPT {{{
     prompt1="Enter your option: "
@@ -60,7 +60,7 @@
     KDE=0
   #}}}
   # MOUNTPOINTS {{{
-    EFI_MOUNTPOINT="/boot/efi"
+    EFI_MOUNTPOINT="/boot"
     ROOT_MOUNTPOINT="/dev/sda1"
     BOOT_MOUNTPOINT="/dev/sda"
     MOUNTPOINT="/mnt"
@@ -217,7 +217,6 @@
             break
             ;;
           3)
-            ip link set ${WIRELESS_DEV} up
             wifi-menu ${WIRELESS_DEV}
             break
             ;;
@@ -261,7 +260,7 @@
       VIDEO_DRIVER="bumblebee"
     elif [[ -n $(echo ${_vga} | grep "nvidia") || -f /sys/kernel/debug/dri/0/vbios.rom ]]; then
       cecho Nvidia
-      read_input_text "Install NVIDIA proprietary driver" $PROPRIETARY_DRIVER
+      read_input_text "Install NVIDIA proprietary driver" $BETTER_VIDEO_DRIVER
       if [[ $OPTION == y ]]; then
         VIDEO_DRIVER="nvidia"
       else
@@ -269,7 +268,12 @@
       fi
     elif [[ -n $(echo ${_vga} | grep "advanced micro devices") || -f /sys/kernel/debug/dri/0/radeon_pm_info || -f /sys/kernel/debug/dri/0/radeon_sa_info ]]; then
       cecho AMD/ATI
-      VIDEO_DRIVER="ati"
+      read_input_text "Install AMDGPU driver" $BETTER_VIDEO_DRIVER
+      if [[ $OPTION == y ]]; then
+        VIDEO_DRIVER="amdgpu"
+      else
+        VIDEO_DRIVER="ati"
+      fi
     elif [[ -n $(echo ${_vga} | grep "intel corporation") || -f /sys/kernel/debug/dri/0/i915_capabilities ]]; then
       cecho Intel
       VIDEO_DRIVER="intel"
@@ -384,9 +388,7 @@
     pacman-key --lsign-key $1
   } #}}}
   add_key_user() { #{{{
-  	su - ${username} -c"
-	gpg --recv-keys --keyserver $1
-	"
+    su - ${username} -c "gpg --recv-keys --keyserver $1"
   } #}}}
   pacman_key(){ #{{{
     if [[ ! -d /etc/pacman.d/gnupg ]]; then
